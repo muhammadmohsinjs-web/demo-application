@@ -128,7 +128,7 @@ export class EcommerceService {
 
     // Use calculatePrice to verify base calculation with the project pricing formula
     // pricing formula: basePrice + (basePrice * taxRate) + 2 (handling/base fee)
-    const baseWithPricingFormula = calculatePrice(subtotal, TAX_RATE);
+    const baseWithPricingFormula = calculatePrice(subtotal + shippingFee, TAX_RATE);
     const total = Number((subtotal + tax + shippingFee).toFixed(2));
 
     return {
