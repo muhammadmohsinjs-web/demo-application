@@ -1,24 +1,32 @@
 import assert from 'assert';
 import http from 'http';
-import { EcommerceService } from './src/ecommerceService.ts';
-import { Store } from './src/store.ts';
+import {
+  getCatalog,
+  addToCart,
+  checkout,
+  cancelOrder,
+  calculateCheckoutTotals,
+} from './src/ecommerceService.ts';
+import {
+  createStore,
+  getProductById,
+} from './src/store.ts';
 import { createEcommerceServer } from './src/server.ts';
 
 async function runTests() {
   console.log('--- Starting Business Logic Tests ---');
 
-  const testStore = new Store();
-  const service = new EcommerceService(testStore);
+  const testStore = createStore();
 
   // Test 1: Catalog browsing
-  const catalog = service.getCatalog();
+  const catalog = getCatalog(testStore);
   assert.strictEqual(catalog.length, 4, 'Catalog should contain 4 sample products');
   const keyboard = catalog.find((p) => p.id === 'prod_1')!;
   assert.strictEqual(keyboard.stockStatus, 'IN_STOCK');
   console.log('✓ Catalog browsing test passed');
 
   // Test 2: Add to cart and calculations
-  const cart1 = service.addToCart('test_cart', 'prod_1', 2);
+  const cart1 = addToCart('test_cart', 'prod_1', 2, testStore);
   assert.strictEqual(cart1.itemCount, 2);
   assert.strictEqual(cart1.subtotal, 179.98);
   console.log('✓ Cart addition and subtotal calculation passed');
@@ -27,7 +35,7 @@ async function runTests() {
   let stockErrorCaught = false;
   try {
     // Docking station only has 2 in stock
-    service.addToCart('test_cart_2', 'prod_4', 10);
+    addToCart('test_cart_2', 'prod_4', 10, testStore);
   } catch (err: any) {
     stockErrorCaught = true;
     assert.match(err.message, /Available stock is 2/);
@@ -36,8 +44,8 @@ async function runTests() {
   console.log('✓ Stock limit guard test passed');
 
   // Test 4: Checkout & inventory deduction
-  const initialStock = testStore.getProductById('prod_1')!.stock;
-  const order = service.checkout(
+  const initialStock = getProductById('prod_1', testStore)!.stock;
+  const order = checkout(
     {
       id: 'cust_101',
       name: 'Alice Johnson',
@@ -45,30 +53,31 @@ async function runTests() {
       address: '123 Tech Blvd',
     },
     undefined,
-    'test_cart'
+    'test_cart',
+    testStore
   );
 
   assert.strictEqual(order.status, 'PAID');
   assert.strictEqual(order.items.length, 1);
   assert.strictEqual(order.items[0].quantity, 2);
-  assert.strictEqual(testStore.getProductById('prod_1')!.stock, initialStock - 2);
+  assert.strictEqual(getProductById('prod_1', testStore)!.stock, initialStock - 2);
   console.log('✓ Checkout and atomic inventory deduction passed');
 
   // Test 5: Order cancellation & inventory replenishment
-  const cancelledOrder = service.cancelOrder(order.id);
+  const cancelledOrder = cancelOrder(order.id, testStore);
   assert.strictEqual(cancelledOrder.status, 'CANCELLED');
-  assert.strictEqual(testStore.getProductById('prod_1')!.stock, initialStock);
+  assert.strictEqual(getProductById('prod_1', testStore)!.stock, initialStock);
   console.log('✓ Order cancellation and stock replenishment passed');
 
   // Test 6: Free shipping threshold policy (order < $50 vs >= $50)
-  const totalsUnder50 = service.calculateCheckoutTotals([{ productId: 'prod_2', quantity: 1 }]); // mouse: $49.99
+  const totalsUnder50 = calculateCheckoutTotals([{ productId: 'prod_2', quantity: 1 }], testStore); // mouse: $49.99
   assert.strictEqual(totalsUnder50.shippingFee, 5.0, 'Subtotal under $50 should incur $5.00 shipping');
-  const totalsOver50 = service.calculateCheckoutTotals([{ productId: 'prod_1', quantity: 1 }]); // keyboard: $89.99
+  const totalsOver50 = calculateCheckoutTotals([{ productId: 'prod_1', quantity: 1 }], testStore); // keyboard: $89.99
   assert.strictEqual(totalsOver50.shippingFee, 0, 'Subtotal $50 or more should qualify for free shipping');
   console.log('✓ Free shipping threshold business rule verified');
 
   console.log('\n--- Starting HTTP REST API Integration Tests ---');
-  const server = createEcommerceServer();
+  const server = createEcommerceServer(testStore);
   await new Promise<void>((resolve) => server.listen(0, resolve));
   const address = server.address() as any;
   const baseUrl = `http://127.0.0.1:${address.port}`;

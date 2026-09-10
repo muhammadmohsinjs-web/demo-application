@@ -1,8 +1,18 @@
 import http, { IncomingMessage, ServerResponse } from 'http';
 import { URL } from 'url';
 import { format } from 'date-fns';
-import { ecommerceService } from './ecommerceService.ts';
-import { store } from './store.ts';
+import {
+  getCatalog,
+  getProduct,
+  getCart,
+  addToCart,
+  removeFromCart,
+  checkout,
+  getOrder,
+  cancelOrder,
+} from './ecommerceService.ts';
+import { getAllOrders, defaultStore } from './store.ts';
+import type { StoreState } from './store.ts';
 
 function sendJson(res: ServerResponse, statusCode: number, data: unknown): void {
   res.writeHead(statusCode, { 'Content-Type': 'application/json' });
@@ -30,7 +40,7 @@ function parseJsonBody(req: IncomingMessage): Promise<any> {
   });
 }
 
-export function createEcommerceServer() {
+export function createEcommerceServer(storeState: StoreState = defaultStore) {
   return http.createServer(async (req, res) => {
     // Enable CORS for frontend integration
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -70,14 +80,14 @@ export function createEcommerceServer() {
 
       // 2. Product Catalog
       if (pathname === '/api/products' && method === 'GET') {
-        const catalog = ecommerceService.getCatalog();
+        const catalog = getCatalog(storeState);
         sendJson(res, 200, { success: true, count: catalog.length, products: catalog });
         return;
       }
 
       if (pathname.startsWith('/api/products/') && method === 'GET') {
         const productId = pathname.replace('/api/products/', '');
-        const product = ecommerceService.getProduct(productId);
+        const product = getProduct(productId, storeState);
         sendJson(res, 200, { success: true, product });
         return;
       }
@@ -86,7 +96,7 @@ export function createEcommerceServer() {
       const cartId = parsedUrl.searchParams.get('cartId') || 'default';
 
       if (pathname === '/api/cart' && method === 'GET') {
-        const cart = ecommerceService.getCart(cartId);
+        const cart = getCart(cartId, storeState);
         sendJson(res, 200, { success: true, cartId, cart });
         return;
       }
@@ -98,14 +108,14 @@ export function createEcommerceServer() {
           sendJson(res, 400, { success: false, error: 'productId is required' });
           return;
         }
-        const cart = ecommerceService.addToCart(cartId, productId, Number(quantity));
+        const cart = addToCart(cartId, productId, Number(quantity), storeState);
         sendJson(res, 200, { success: true, message: 'Item added to cart', cart });
         return;
       }
 
       if (pathname.startsWith('/api/cart/items/') && method === 'DELETE') {
         const productId = pathname.replace('/api/cart/items/', '');
-        const cart = ecommerceService.removeFromCart(cartId, productId);
+        const cart = removeFromCart(cartId, productId, storeState);
         sendJson(res, 200, { success: true, message: 'Item removed from cart', cart });
         return;
       }
@@ -119,7 +129,7 @@ export function createEcommerceServer() {
           return;
         }
 
-        const order = ecommerceService.checkout(customer, items, checkoutCartId || cartId);
+        const order = checkout(customer, items, checkoutCartId || cartId, storeState);
         sendJson(res, 201, {
           success: true,
           message: 'Order placed successfully',
@@ -131,14 +141,14 @@ export function createEcommerceServer() {
 
       // 5. Orders
       if (pathname === '/api/orders' && method === 'GET') {
-        const orders = store.getAllOrders();
+        const orders = getAllOrders(storeState);
         sendJson(res, 200, { success: true, count: orders.length, orders });
         return;
       }
 
       if (pathname.startsWith('/api/orders/') && pathname.endsWith('/cancel') && method === 'POST') {
         const orderId = pathname.replace('/api/orders/', '').replace('/cancel', '');
-        const order = ecommerceService.cancelOrder(orderId);
+        const order = cancelOrder(orderId, storeState);
         sendJson(res, 200, {
           success: true,
           message: `Order ${orderId} cancelled and stock replenished`,
@@ -149,7 +159,7 @@ export function createEcommerceServer() {
 
       if (pathname.startsWith('/api/orders/') && method === 'GET') {
         const orderId = pathname.replace('/api/orders/', '');
-        const order = ecommerceService.getOrder(orderId);
+        const order = getOrder(orderId, storeState);
         sendJson(res, 200, {
           success: true,
           order,
