@@ -1,0 +1,20 @@
+name: Graphentra Analyzer
+
+on:
+  push:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout demo application
+        uses: actions/checkout@v7
+        with:
+          path: demo-application
+
+      - name: Checkout Graphentra analyzer
+        uses: actions/checkout@v7
+        with:
+          repository: muhammadmohsinjs-web/graphentra-analyzer
+          path: graphentra-analyzer
