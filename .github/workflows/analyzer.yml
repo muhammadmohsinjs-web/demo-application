@@ -17,4 +17,4 @@ jobs:
           node-version: 24
 
       - name: Run analyzer
-        run: node analyzer.js
+        run: node analyzer.ts
