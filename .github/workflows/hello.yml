@@ -1,21 +1,18 @@
-name: Hello World Workflow
+name: Lesson 2
 
 on:
   push:
 
 jobs:
-  hello:
+  learn:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Say hello
-        run: echo "Hello from GitHub Actions!"
+      - name: Show files before checkout
+        run: ls -la
 
-      - name: Show current directory
-        run: pwd
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
-      - name: Show files
-        run: ls
-
-      - name: Check Node version
-        run: node --version
+      - name: Show files after checkout
+        run: ls -la
