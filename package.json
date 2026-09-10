@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/muhammadmohsinjs-web/demo-application/issues"
   },
-  "homepage": "https://github.com/muhammadmohsinjs-web/demo-application#readme"
+  "homepage": "https://github.com/muhammadmohsinjs-web/demo-application#readme",
+  "dependencies": {
+    "date-fns": "^4.4.0"
+  }
 }
