@@ -1,7 +1,13 @@
+const fs = require('fs');
+
 console.log('Analyzer started');
 
-console.log('Reading repository...');
+const files = fs.readdirSync('.');
 
-console.log('Finding changed functions...');
+console.log('Files found in repository:');
+
+for (const file of files) {
+  console.log('-', file);
+}
 
 console.log('Analysis complete');
