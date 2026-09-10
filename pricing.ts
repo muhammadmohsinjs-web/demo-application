@@ -1,4 +1,4 @@
 export function calculatePrice(basePrice: number, taxRate: number): number {
   const taxAmount = basePrice * taxRate;
-  return basePrice + taxAmount;
+  return basePrice + taxAmount + 2;
 }
