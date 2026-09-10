@@ -35,4 +35,7 @@ jobs:
 
       - name: Run Graphentra analyzer
         working-directory: graphentra-analyzer
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
         run: npm run analyze -- ../demo-application
