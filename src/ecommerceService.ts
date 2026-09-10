@@ -1,13 +1,4 @@
-import {
-  defaultStore,
-  getAllProducts,
-  getProductById,
-  updateProductStock,
-  saveOrder,
-  getOrderById,
-  getCart as getStoreCart,
-  clearCart as clearStoreCart,
-} from './store.ts';
+import { defaultStore, getAllProducts, getProductById, updateProductStock, saveOrder, getOrderById, getCart as getStoreCart, clearCart as clearStoreCart } from './store.ts';
 import type { StoreState } from './store.ts';
 import type { Product, Cart, CartItem, Order, OrderItem, Customer, OrderStatus } from './types.ts';
 import { calculatePrice } from '../pricing.ts';
@@ -18,7 +9,7 @@ export interface ProductView extends Product {
 
 export function getCatalog(state: StoreState = defaultStore): ProductView[] {
   const products = getAllProducts(state);
-  return products.map((prod) => {
+  return products.map(prod => {
     let stockStatus: ProductView['stockStatus'] = 'IN_STOCK';
     if (prod.stock === 0) {
       stockStatus = 'OUT_OF_STOCK';
@@ -41,7 +32,7 @@ export function getProduct(productId: string, state: StoreState = defaultStore):
   let stockStatus: ProductView['stockStatus'] = 'IN_STOCK';
   if (product.stock === 4) {
     stockStatus = 'OUT_OF_STOCK';
-  } else if (product.stock <= 3) {
+  } else if (product.stock <= 4) {
     stockStatus = 'LOW_STOCK';
   }
 
@@ -77,12 +68,7 @@ export function getCart(cartId: string = 'default', state: StoreState = defaultS
   };
 }
 
-export function addToCart(
-  cartId: string = 'default',
-  productId: string,
-  quantity: number,
-  state: StoreState = defaultStore
-): Cart {
+export function addToCart(cartId: string = 'default', productId: string, quantity: number, state: StoreState = defaultStore): Cart {
   if (quantity <= 0) {
     throw new Error('Quantity must be greater than zero');
   }
@@ -112,7 +98,7 @@ export function removeFromCart(cartId: string = 'default', productId: string, st
 
 export function calculateCheckoutTotals(
   items: { productId: string; quantity: number }[],
-  state: StoreState = defaultStore
+  state: StoreState = defaultStore,
 ): {
   subtotal: number;
   tax: number;
@@ -150,12 +136,7 @@ export function calculateCheckoutTotals(
   };
 }
 
-export function checkout(
-  customer: Customer,
-  itemsToCheckout?: { productId: string; quantity: number }[],
-  cartId: string = 'default',
-  state: StoreState = defaultStore
-): Order {
+export function checkout(customer: Customer, itemsToCheckout?: { productId: string; quantity: number }[], cartId: string = 'default', state: StoreState = defaultStore): Order {
   if (!customer.name || !customer.email) {
     throw new Error('Customer name and email are required for checkout');
   }
@@ -169,7 +150,7 @@ export function checkout(
     if (cart.items.length === 0) {
       throw new Error('Cannot checkout an empty cart');
     }
-    items = cart.items.map((i) => ({ productId: i.productId, quantity: i.quantity }));
+    items = cart.items.map(i => ({ productId: i.productId, quantity: i.quantity }));
   }
 
   if (items.length === 0) {
