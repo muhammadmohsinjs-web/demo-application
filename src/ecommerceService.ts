@@ -124,8 +124,9 @@ export class EcommerceService {
     subtotal = Number(subtotal.toFixed(2));
     const tax = Number((subtotal * TAX_RATE).toFixed(2));
 
-    // Free shipping if subtotal >= 100, otherwise flat 5.00 shipping fee
-    const shippingFee = subtotal >= 100 ? 0 : 5.0;
+    // Business rule: Lowered free shipping threshold from $100 to $50 to boost customer conversion
+    const FREE_SHIPPING_THRESHOLD = 50;
+    const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 5.0;
 
     // Use calculatePrice to verify base calculation with the project pricing formula
     // pricing formula: basePrice + (basePrice * taxRate) + 2 (handling/base fee)

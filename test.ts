@@ -60,6 +60,13 @@ async function runTests() {
   assert.strictEqual(testStore.getProductById('prod_1')!.stock, initialStock);
   console.log('✓ Order cancellation and stock replenishment passed');
 
+  // Test 6: Free shipping threshold policy (order < $50 vs >= $50)
+  const totalsUnder50 = service.calculateCheckoutTotals([{ productId: 'prod_2', quantity: 1 }]); // mouse: $49.99
+  assert.strictEqual(totalsUnder50.shippingFee, 5.0, 'Subtotal under $50 should incur $5.00 shipping');
+  const totalsOver50 = service.calculateCheckoutTotals([{ productId: 'prod_1', quantity: 1 }]); // keyboard: $89.99
+  assert.strictEqual(totalsOver50.shippingFee, 0, 'Subtotal $50 or more should qualify for free shipping');
+  console.log('✓ Free shipping threshold business rule verified');
+
   console.log('\n--- Starting HTTP REST API Integration Tests ---');
   const server = createEcommerceServer();
   await new Promise<void>((resolve) => server.listen(0, resolve));
