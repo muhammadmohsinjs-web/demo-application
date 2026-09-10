@@ -10,3 +10,12 @@ jobs:
     steps:
       - name: Say hello
         run: echo "Hello from GitHub Actions!"
+
+      - name: Show current directory
+        run: pwd
+
+      - name: Show files
+        run: ls
+
+      - name: Check Node version
+        run: node --version
