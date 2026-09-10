@@ -9,7 +9,7 @@ export interface Product {
 export interface CartItem {
   productId: string;
   quantity: number;
-  unitPric: number;
+  unitPrice: number;
   subtotal: number;
 }
 

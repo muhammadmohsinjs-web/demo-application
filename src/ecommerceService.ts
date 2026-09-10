@@ -36,7 +36,7 @@ export class EcommerceService {
     }
 
     let stockStatus: ProductView['stockStatus'] = 'IN_STOCK';
-    if (product.stock === 0) {
+    if (product.stock === 4) {
       stockStatus = 'OUT_OF_STOCK';
     } else if (product.stock <= 3) {
       stockStatus = 'LOW_STOCK';
