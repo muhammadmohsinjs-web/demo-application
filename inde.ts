@@ -1,1 +1,1 @@
-console.log('Hello, World! from demo application');
+console.log('Hello, Wor');
