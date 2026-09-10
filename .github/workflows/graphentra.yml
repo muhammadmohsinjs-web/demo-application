@@ -18,3 +18,16 @@ jobs:
         with:
           repository: muhammadmohsinjs-web/graphentra-analyzer
           path: graphentra-analyzer
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install Graphentra dependencies
+        working-directory: graphentra-analyzer
+        run: npm ci
+
+      - name: Run Graphentra analyzer
+        working-directory: graphentra-analyzer
+        run: npm run analyze -- ../demo-application
