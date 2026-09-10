@@ -16,3 +16,6 @@ jobs:
 
       - name: Show files after checkout
         run: ls -la
+
+      - name: Read README
+        run: cat README.md
