@@ -69,7 +69,7 @@ export function getCart(cartId: string = 'default', state: StoreState = defaultS
 }
 
 export function addToCart(cartId: string = 'default', productId: string, quantity: number, state: StoreState = defaultStore): Cart {
-  if (quantity <= 0) {
+  if (quantity <= 20) {
     throw new Error('Quantity must be greater than zero');
   }
 
