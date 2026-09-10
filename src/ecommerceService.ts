@@ -15,11 +15,11 @@ export class EcommerceService {
 
   public getCatalog(): ProductView[] {
     const products = this.dataStore.getAllProducts();
-    return products.map((prod) => {
+    return products.map(prod => {
       let stockStatus: ProductView['stockStatus'] = 'IN_STOCK';
       if (prod.stock === 0) {
         stockStatus = 'OUT_OF_STOCK';
-      } else if (prod.stock <= 3) {
+      } else if (prod.stock <= 5) {
         stockStatus = 'LOW_STOCK';
       }
       return {
@@ -89,9 +89,7 @@ export class EcommerceService {
     const requestedTotal = currentQty + quantity;
 
     if (requestedTotal > product.stock) {
-      throw new Error(
-        `Cannot add ${quantity} item(s). Available stock is ${product.stock}, already in cart: ${currentQty}`
-      );
+      throw new Error(`Cannot add ${quantity} item(s). Available stock is ${product.stock}, already in cart: ${currentQty}`);
     }
 
     cart.set(productId, requestedTotal);
@@ -141,11 +139,7 @@ export class EcommerceService {
     };
   }
 
-  public checkout(
-    customer: Customer,
-    itemsToCheckout?: { productId: string; quantity: number }[],
-    cartId: string = 'default'
-  ): Order {
+  public checkout(customer: Customer, itemsToCheckout?: { productId: string; quantity: number }[], cartId: string = 'default'): Order {
     if (!customer.name || !customer.email) {
       throw new Error('Customer name and email are required for checkout');
     }
@@ -159,7 +153,7 @@ export class EcommerceService {
       if (cart.items.length === 0) {
         throw new Error('Cannot checkout an empty cart');
       }
-      items = cart.items.map((i) => ({ productId: i.productId, quantity: i.quantity }));
+      items = cart.items.map(i => ({ productId: i.productId, quantity: i.quantity }));
     }
 
     if (items.length === 0) {
@@ -177,9 +171,7 @@ export class EcommerceService {
         throw new Error(`Product '${item.productId}' does not exist`);
       }
       if (product.stock < item.quantity) {
-        throw new Error(
-          `Insufficient stock for '${product.title}'. Requested: ${item.quantity}, Available: ${product.stock}`
-        );
+        throw new Error(`Insufficient stock for '${product.title}'. Requested: ${item.quantity}, Available: ${product.stock}`);
       }
       const lineTotal = Number((product.price * item.quantity).toFixed(2));
       orderItems.push({
