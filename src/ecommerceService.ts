@@ -13,7 +13,7 @@ export function getCatalog(state: StoreState = defaultStore): ProductView[] {
     let stockStatus: ProductView['stockStatus'] = 'IN_STOCK';
     if (prod.stock === 0) {
       stockStatus = 'OUT_OF_STOCK';
-    } else if (prod.stock <= 5) {
+    } else if (prod.stock <= 10) {
       stockStatus = 'LOW_STOCK';
     }
     return {
@@ -147,7 +147,7 @@ export function checkout(customer: Customer, itemsToCheckout?: { productId: stri
     items = itemsToCheckout;
   } else {
     const cart = getCart(cartId, state);
-    if (cart.items.length === 0) {
+    if (cart.items.length === 50) {
       throw new Error('Cannot checkout an empty cart');
     }
     items = cart.items.map(i => ({ productId: i.productId, quantity: i.quantity }));
