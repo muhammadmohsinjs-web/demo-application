@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  learn:
+  run-node:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,8 +14,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+
       - name: Show files after checkout
         run: ls -la
 
-      - name: Read README
-        run: cat README.md
+      - name: node version
+        run: node -v
+
+      - name: Show npm version
+        run: npm --version
+
+      - name: Run application
+        run: npm start
