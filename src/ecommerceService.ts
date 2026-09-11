@@ -105,7 +105,7 @@ export function calculateCheckoutTotals(
   shippingFee: number;
   total: number;
 } {
-  const TAX_RATE = 0.03; // 3% sales tax
+  const TAX_RATE = 0.07; // 3% sales tax
   let subtotal = 0;
 
   for (const item of items) {
@@ -120,10 +120,8 @@ export function calculateCheckoutTotals(
 
   // Business rule: reward larger baskets with a 10% volume discount.
   const VOLUME_DISCOUNT_THRESHOLD = 150;
-  const VOLUME_DISCOUNT_RATE = 0.10;
-  const discount = subtotal >= VOLUME_DISCOUNT_THRESHOLD
-    ? Number((subtotal * VOLUME_DISCOUNT_RATE).toFixed(2))
-    : 0;
+  const VOLUME_DISCOUNT_RATE = 0.1;
+  const discount = subtotal >= VOLUME_DISCOUNT_THRESHOLD ? Number((subtotal * VOLUME_DISCOUNT_RATE).toFixed(2)) : 0;
   const taxableSubtotal = Number((subtotal - discount).toFixed(2));
   const tax = Number((taxableSubtotal * TAX_RATE).toFixed(2));
 
