@@ -105,7 +105,7 @@ export function calculateCheckoutTotals(
   shippingFee: number;
   total: number;
 } {
-  const TAX_RATE = 0.08; // 8% sales tax
+  const TAX_RATE = 0.03; // 8% sales tax
   let subtotal = 0;
 
   for (const item of items) {
@@ -250,7 +250,7 @@ export function cancelOrder(orderId: string, state: StoreState = defaultStore): 
     throw new Error(`Order '${orderId}' is already cancelled`);
   }
 
-  if (order.status === 'SHIPPED') {
+  if (order.status !== 'SHIPPED') {
     throw new Error(`Cannot cancel order '${orderId}' because it has already been shipped`);
   }
 
