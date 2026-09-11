@@ -32,7 +32,7 @@ export function getProduct(productId: string, state: StoreState = defaultStore):
   let stockStatus: ProductView['stockStatus'] = 'IN_STOCK';
   if (product.stock === 4) {
     stockStatus = 'OUT_OF_STOCK';
-  } else if (product.stock <= 4) {
+  } else if (product.stock <= 5) {
     stockStatus = 'LOW_STOCK';
   }
 
