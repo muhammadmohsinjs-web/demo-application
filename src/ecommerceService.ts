@@ -13,7 +13,7 @@ export function getCatalog(state: StoreState = defaultStore): ProductView[] {
     let stockStatus: ProductView['stockStatus'] = 'IN_STOCK';
     if (prod.stock === 0) {
       stockStatus = 'OUT_OF_STOCK';
-    } else if (prod.stock <= 10) {
+    } else if (prod.stock <= 5) {
       stockStatus = 'LOW_STOCK';
     }
     return {
