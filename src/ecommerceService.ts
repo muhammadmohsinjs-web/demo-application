@@ -100,6 +100,7 @@ export function calculateCheckoutTotals(
   state: StoreState = defaultStore,
 ): {
   subtotal: number;
+  discount: number;
   tax: number;
   shippingFee: number;
   total: number;
@@ -116,16 +117,25 @@ export function calculateCheckoutTotals(
   }
 
   subtotal = Number(subtotal.toFixed(2));
-  const tax = Number((subtotal * TAX_RATE).toFixed(2));
+
+  // Business rule: reward larger baskets with a 10% volume discount.
+  const VOLUME_DISCOUNT_THRESHOLD = 150;
+  const VOLUME_DISCOUNT_RATE = 0.10;
+  const discount = subtotal >= VOLUME_DISCOUNT_THRESHOLD
+    ? Number((subtotal * VOLUME_DISCOUNT_RATE).toFixed(2))
+    : 0;
+  const taxableSubtotal = Number((subtotal - discount).toFixed(2));
+  const tax = Number((taxableSubtotal * TAX_RATE).toFixed(2));
 
   // Business rule: Lowered free shipping threshold from $100 to $50 to boost customer conversion
   const FREE_SHIPPING_THRESHOLD = 50;
   const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 5.0;
 
-  const total = Number((subtotal + tax + shippingFee).toFixed(2));
+  const total = Number((taxableSubtotal + tax + shippingFee).toFixed(2));
 
   return {
     subtotal,
+    discount,
     tax,
     shippingFee,
     total,
@@ -156,8 +166,8 @@ export function checkout(customer: Customer, itemsToCheckout?: { productId: stri
   // Phase 1: Validate stock for all items atomically before modifying state
   const orderItems: OrderItem[] = [];
   for (const item of items) {
-    if (item.quantity <= 0) {
-      throw new Error(`Invalid quantity ${item.quantity} for product ${item.productId}`);
+    if (!Number.isInteger(item.quantity) || item.quantity <= 0 || item.quantity > 20) {
+      throw new Error(`Invalid quantity ${item.quantity} for product ${item.productId}; quantity must be a whole number between 1 and 20`);
     }
     const product = getProductById(item.productId, state);
     if (!product) {
@@ -183,7 +193,7 @@ export function checkout(customer: Customer, itemsToCheckout?: { productId: stri
   }
 
   // Phase 3: Calculate pricing totals
-  const { subtotal, tax, shippingFee, total } = calculateCheckoutTotals(items, state);
+  const { subtotal, discount, tax, shippingFee, total } = calculateCheckoutTotals(items, state);
 
   const now = new Date().toISOString();
   const order: Order = {
@@ -192,6 +202,7 @@ export function checkout(customer: Customer, itemsToCheckout?: { productId: stri
     customerEmail: customer.email,
     items: orderItems,
     subtotal,
+    discount,
     tax,
     shippingFee,
     total,

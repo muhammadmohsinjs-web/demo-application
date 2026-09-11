@@ -42,6 +42,7 @@ export interface Order {
   customerEmail: string;
   items: OrderItem[];
   subtotal: number;
+  discount: number;
   tax: number;
   shippingFee: number;
   total: number;

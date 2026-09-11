@@ -74,7 +74,31 @@ async function runTests() {
   assert.strictEqual(totalsUnder50.shippingFee, 5.0, 'Subtotal under $50 should incur $5.00 shipping');
   const totalsOver50 = calculateCheckoutTotals([{ productId: 'prod_1', quantity: 1 }], testStore); // keyboard: $89.99
   assert.strictEqual(totalsOver50.shippingFee, 0, 'Subtotal $50 or more should qualify for free shipping');
+  assert.strictEqual(totalsOver50.discount, 0, 'Orders below the volume discount threshold should not be discounted');
   console.log('✓ Free shipping threshold business rule verified');
+
+  // Test 7: Volume discount and checkout quantity validation
+  const volumeTotals = calculateCheckoutTotals([
+    { productId: 'prod_3', quantity: 1 },
+    { productId: 'prod_1', quantity: 1 },
+  ], testStore);
+  assert.strictEqual(volumeTotals.subtotal, 289.98);
+  assert.strictEqual(volumeTotals.discount, 29.0);
+  assert.strictEqual(volumeTotals.tax, 7.83);
+  let quantityErrorCaught = false;
+  try {
+    checkout(
+      { id: 'cust_invalid', name: 'Invalid Quantity', email: 'invalid@example.com', address: '1 Test St' },
+      [{ productId: 'prod_1', quantity: 1.5 }],
+      'invalid_quantity_cart',
+      testStore,
+    );
+  } catch (err: any) {
+    quantityErrorCaught = true;
+    assert.match(err.message, /whole number between 1 and 20/);
+  }
+  assert.strictEqual(quantityErrorCaught, true, 'Checkout should reject fractional quantities');
+  console.log('✓ Volume discount and checkout quantity policy passed');
 
   console.log('\n--- Starting HTTP REST API Integration Tests ---');
   const server = createEcommerceServer(testStore);
