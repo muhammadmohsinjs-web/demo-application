@@ -26,6 +26,7 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`  GET    /api/orders`);
     console.log(`  GET    /api/orders/:id`);
     console.log(`  POST   /api/orders/:id/cancel`);
+    console.log(`  PUT    /api/orders/:id/status`);
     console.log(`=========================================`);
   });
 }

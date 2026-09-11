@@ -10,6 +10,7 @@ import {
   checkout,
   getOrder,
   cancelOrder,
+  updateOrderStatus,
 } from './ecommerceService.ts';
 import { getAllOrders, defaultStore } from './store.ts';
 import type { StoreState } from './store.ts';
@@ -73,6 +74,7 @@ export function createEcommerceServer(storeState: StoreState = defaultStore) {
             { method: 'GET', path: '/api/orders', desc: 'List all processed orders' },
             { method: 'GET', path: '/api/orders/:id', desc: 'Inspect specific order receipt' },
             { method: 'POST', path: '/api/orders/:id/cancel', desc: 'Cancel order and replenish stock' },
+            { method: 'PUT', path: '/api/orders/:id/status', desc: 'Advance order status { status: PAID|SHIPPED|CANCELLED }' },
           ],
         });
         return;
@@ -154,6 +156,19 @@ export function createEcommerceServer(storeState: StoreState = defaultStore) {
           message: `Order ${orderId} cancelled and stock replenished`,
           order,
         });
+        return;
+      }
+
+      if (pathname.startsWith('/api/orders/') && pathname.endsWith('/status') && method === 'PUT') {
+        const orderId = pathname.replace('/api/orders/', '').replace('/status', '');
+        const body = await parseJsonBody(req);
+        const allowedStatuses = ['PENDING', 'PAID', 'SHIPPED', 'CANCELLED'];
+        if (!allowedStatuses.includes(body.status)) {
+          sendJson(res, 400, { success: false, error: 'status must be PENDING, PAID, SHIPPED, or CANCELLED' });
+          return;
+        }
+        const order = updateOrderStatus(orderId, body.status, storeState);
+        sendJson(res, 200, { success: true, message: `Order ${orderId} updated to ${order.status}`, order });
         return;
       }
 

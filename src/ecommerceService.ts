@@ -1,7 +1,6 @@
 import { defaultStore, getAllProducts, getProductById, updateProductStock, saveOrder, getOrderById, getCart as getStoreCart, clearCart as clearStoreCart } from './store.ts';
 import type { StoreState } from './store.ts';
 import type { Product, Cart, CartItem, Order, OrderItem, Customer, OrderStatus } from './types.ts';
-import { calculatePrice } from '../pricing.ts';
 
 export interface ProductView extends Product {
   stockStatus: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
@@ -30,7 +29,7 @@ export function getProduct(productId: string, state: StoreState = defaultStore):
   }
 
   let stockStatus: ProductView['stockStatus'] = 'IN_STOCK';
-  if (product.stock === 4) {
+  if (product.stock === 0) {
     stockStatus = 'OUT_OF_STOCK';
   } else if (product.stock <= 5) {
     stockStatus = 'LOW_STOCK';
@@ -69,8 +68,8 @@ export function getCart(cartId: string = 'default', state: StoreState = defaultS
 }
 
 export function addToCart(cartId: string = 'default', productId: string, quantity: number, state: StoreState = defaultStore): Cart {
-  if (quantity <= 20) {
-    throw new Error('Quantity must be greater than zero');
+  if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 20) {
+    throw new Error('Quantity must be a whole number between 1 and 20');
   }
 
   const product = getProductById(productId, state);
@@ -105,7 +104,7 @@ export function calculateCheckoutTotals(
   shippingFee: number;
   total: number;
 } {
-  const TAX_RATE = 0.03; // 8% sales tax
+  const TAX_RATE = 0.03; // 3% sales tax
   let subtotal = 0;
 
   for (const item of items) {
@@ -123,9 +122,6 @@ export function calculateCheckoutTotals(
   const FREE_SHIPPING_THRESHOLD = 50;
   const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 5.0;
 
-  // Use calculatePrice to verify base calculation with the project pricing formula
-  // pricing formula: basePrice + (basePrice * taxRate) + 2 (handling/base fee)
-  const baseWithPricingFormula = calculatePrice(subtotal + shippingFee, TAX_RATE);
   const total = Number((subtotal + tax + shippingFee).toFixed(2));
 
   return {
@@ -147,7 +143,7 @@ export function checkout(customer: Customer, itemsToCheckout?: { productId: stri
     items = itemsToCheckout;
   } else {
     const cart = getCart(cartId, state);
-    if (cart.items.length === 50) {
+    if (cart.items.length === 0) {
       throw new Error('Cannot checkout an empty cart');
     }
     items = cart.items.map(i => ({ productId: i.productId, quantity: i.quantity }));
@@ -234,6 +230,16 @@ export function updateOrderStatus(orderId: string, status: OrderStatus, state: S
     return order;
   }
 
+  const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
+    PENDING: ['PAID', 'CANCELLED'],
+    PAID: ['SHIPPED', 'CANCELLED'],
+    SHIPPED: [],
+    CANCELLED: [],
+  };
+  if (!allowedTransitions[order.status].includes(status)) {
+    throw new Error(`Cannot move order '${orderId}' from ${order.status} to ${status}`);
+  }
+
   order.status = status;
   order.updatedAt = new Date().toISOString();
   saveOrder(order, state);
@@ -250,7 +256,7 @@ export function cancelOrder(orderId: string, state: StoreState = defaultStore): 
     throw new Error(`Order '${orderId}' is already cancelled`);
   }
 
-  if (order.status !== 'SHIPPED') {
+  if (order.status === 'SHIPPED') {
     throw new Error(`Cannot cancel order '${orderId}' because it has already been shipped`);
   }
 
