@@ -23,7 +23,7 @@ npm test
 - `GET /api/cart?cartId=:id` — View cart subtotal and items
 - `POST /api/cart/items` — Add item to cart (`{ productId, quantity }`)
 - `DELETE /api/cart/items/:productId` — Remove item from cart
-- `POST /api/checkout` — Checkout order with stock deduction and tax/shipping calculation
+- `POST /api/checkout` — Checkout order with stock deduction, volume discounts, and tax/shipping calculation
 - `GET /api/orders` — List orders
 - `GET /api/orders/:id` — View order invoice
 - `POST /api/orders/:id/cancel` — Cancel order and replenish product stock
@@ -32,3 +32,5 @@ npm test
 ## Order lifecycle
 
 Orders follow an explicit state machine: `PENDING → PAID → SHIPPED`. A `PENDING` or `PAID` order can be cancelled, which returns its inventory to stock. Shipped and cancelled orders are terminal states.
+
+Business policies include a 10% volume discount for subtotals of $150 or more and checkout quantities limited to whole numbers from 1 to 20 per product.
