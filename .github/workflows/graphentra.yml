@@ -43,6 +43,9 @@ jobs:
         run: npm run build
 
       - name: Run Graphentra
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: deepseek/deepseek-v4.1-flash
         run: |
           node graphentra-analyzer/dist/index.js \
             --target "$GITHUB_WORKSPACE" \
@@ -61,12 +64,11 @@ jobs:
               process.env.RUNNER_TEMP + '/graphentra-report.md';
 
             const report = fs.readFileSync(reportPath, 'utf8');
-
             const marker = '<!-- graphentra-report -->';
 
             const body = `${marker}
 
-            # 🔍 Graphentra QA Impact Report
+            # Graphentra QA Impact Report
 
             ${report}
 
