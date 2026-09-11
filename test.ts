@@ -151,13 +151,22 @@ async function runTests() {
   assert.strictEqual(getOrderRes.body.order.id, createdOrderId);
   console.log('✓ HTTP GET /api/orders/:id passed');
 
-  // HTTP Test 5: POST /api/orders/:id/cancel
+  // HTTP Test 5: PUT /api/orders/:id/status
+  const statusRes = await request(`/api/orders/${createdOrderId}/status`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+  }, { status: 'SHIPPED' });
+  assert.strictEqual(statusRes.statusCode, 200);
+  assert.strictEqual(statusRes.body.order.status, 'SHIPPED');
+  console.log('✓ HTTP PUT /api/orders/:id/status passed');
+
+  // HTTP Test 6: POST /api/orders/:id/cancel rejects shipped orders
   const cancelOrderRes = await request(`/api/orders/${createdOrderId}/cancel`, {
     method: 'POST',
   });
-  assert.strictEqual(cancelOrderRes.statusCode, 200);
-  assert.strictEqual(cancelOrderRes.body.order.status, 'CANCELLED');
-  console.log('✓ HTTP POST /api/orders/:id/cancel passed');
+  assert.strictEqual(cancelOrderRes.statusCode, 400);
+  assert.match(cancelOrderRes.body.error, /already been shipped/);
+  console.log('✓ HTTP cancellation guard for shipped orders passed');
 
   await new Promise<void>((resolve) => server.close(() => resolve()));
   console.log('\nAll business and HTTP integration tests passed successfully! 🎉');

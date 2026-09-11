@@ -27,4 +27,8 @@ npm test
 - `GET /api/orders` — List orders
 - `GET /api/orders/:id` — View order invoice
 - `POST /api/orders/:id/cancel` — Cancel order and replenish product stock
+- `PUT /api/orders/:id/status` — Advance an order through its lifecycle (`PAID`, `SHIPPED`, or `CANCELLED`)
 
+## Order lifecycle
+
+Orders follow an explicit state machine: `PENDING → PAID → SHIPPED`. A `PENDING` or `PAID` order can be cancelled, which returns its inventory to stock. Shipped and cancelled orders are terminal states.
