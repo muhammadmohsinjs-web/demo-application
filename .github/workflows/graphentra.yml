@@ -1,41 +1,113 @@
-name: Graphentra Analyzer
+name: Graphentra Change Analysis
 
 on:
-  push:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
-  analyze:
+  graphentra-analysis:
+    name: Analyze PR Impact
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout demo application
-        uses: actions/checkout@v7
+      - name: Checkout application
+        uses: actions/checkout@v4
         with:
-          path: demo-application
-          fetch-depth: 2
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Checkout Graphentra analyzer
-        uses: actions/checkout@v7
+      - name: Checkout Graphentra Analyzer
+        uses: actions/checkout@v4
         with:
           repository: muhammadmohsinjs-web/graphentra-analyzer
           path: graphentra-analyzer
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Show changed files
-        working-directory: demo-application
-        run: git diff --name-only HEAD~1 HEAD
-
-      - name: Install Graphentra dependencies
+      - name: Install Graphentra
         working-directory: graphentra-analyzer
         run: npm ci
 
-      - name: Run Graphentra analyzer
+      - name: Build Graphentra
         working-directory: graphentra-analyzer
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
-        run: npm run analyze -- ../demo-application
+        run: npm run build
+
+      - name: Run Graphentra
+        run: |
+          node graphentra-analyzer/dist/index.js \
+            --target "$GITHUB_WORKSPACE" \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --report "$RUNNER_TEMP/graphentra-report.md"
+
+      - name: Comment Graphentra report on PR
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            const reportPath =
+              process.env.RUNNER_TEMP + '/graphentra-report.md';
+
+            const report = fs.readFileSync(reportPath, 'utf8');
+
+            const marker = '<!-- graphentra-report -->';
+
+            const body = `${marker}
+
+            # 🔍 Graphentra QA Impact Report
+
+            ${report}
+
+            ---
+            _Generated automatically by Graphentra for commit \`${context.sha.substring(0, 7)}\`._
+            `;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner,
+                repo,
+                issue_number
+              }
+            );
+
+            const existingComment = comments.find(
+              comment =>
+                comment.user.type === 'Bot' &&
+                comment.body?.includes(marker)
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body
+              });
+
+              console.log('Updated existing Graphentra report');
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body
+              });
+
+              console.log('Created Graphentra report');
+            }
