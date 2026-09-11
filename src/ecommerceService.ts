@@ -105,7 +105,7 @@ export function calculateCheckoutTotals(
   shippingFee: number;
   total: number;
 } {
-  const TAX_RATE = 0.01;
+  const TAX_RATE = 0.02;
   let subtotal = 0;
 
   for (const item of items) {
