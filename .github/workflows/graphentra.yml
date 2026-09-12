@@ -68,7 +68,7 @@ jobs:
 
             const body = `${marker}
 
-            # Graphentra QA Impact Report
+
 
             ${report}
 
