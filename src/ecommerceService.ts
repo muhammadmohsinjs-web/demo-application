@@ -126,7 +126,7 @@ export function calculateCheckoutTotals(
   const tax = Number((taxableSubtotal * TAX_RATE).toFixed(2));
 
   // Business rule: Lowered free shipping threshold from $100 to $50 to boost customer conversion
-  const FREE_SHIPPING_THRESHOLD = 50;
+  const FREE_SHIPPING_THRESHOLD = 100;
   const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 5.0;
 
   const total = Number((taxableSubtotal + tax + shippingFee).toFixed(2));
